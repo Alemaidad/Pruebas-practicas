@@ -1,16 +1,14 @@
 {
-  "name": "lti-demo",
+  "name": "moodle-rest-demo",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "concurrently \"node server.js\" \"node rest-server.js\"",
-    "start:lti": "node server.js",
+    "start": "node rest-server.js",
     "start:rest": "node rest-server.js"
   },
   "dependencies": {
     "body-parser": "^1.20.3",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "concurrently": "^9.1.2"
+    "express": "^4.21.2"
   }
 }

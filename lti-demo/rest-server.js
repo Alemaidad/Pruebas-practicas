@@ -9,10 +9,10 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
-// Este servidor es independiente del servidor LTI, por eso utiliza otro puerto.
+// Puerto del servicio REST.
 const PORT = Number(process.env.REST_PORT || 3001);
 // Nunca escribas el token de Moodle en el código. La clave administrativa se lee desde .env.
-const ADMIN_KEY = String(process.env.ADMIN_KEY || 'LTI_ADMIN_KEY').trim();
+const ADMIN_KEY = String(process.env.ADMIN_KEY || 'REST_ADMIN_KEY').trim();
 
 // La configuración se mantiene en memoria mientras el proceso está encendido.
 // Si se reinicia Node, será necesario volver a introducir la URL y el token.
@@ -143,14 +143,14 @@ async function importMoodleData() {
 }
 
 // Construye una página HTML sencilla para que una persona pueda configurar e inspeccionar el servicio.
-// Esta interfaz pertenece al backend REST; no forma parte del backend LTI.
+// Interfaz del importador REST.
 function renderPage(title, content) {
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(title)}</title><style>
   :root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #17252b; background: #f7faf8; --teal: #116b66; --line: #d9e4e1; --muted: #617177; }
   * { box-sizing: border-box; } body { margin: 0; } .topbar { padding: 20px 7vw; color: white; background: #153f40; font-weight: 800; letter-spacing: .03em; } .topbar small { display: block; margin-top: 4px; color: #b8d8ce; font-size: 12px; font-weight: 500; }
   .shell { width: min(1060px, calc(100% - 32px)); margin: 34px auto 60px; } .hero, .panel { padding: 28px; border: 1px solid var(--line); background: white; } .hero { box-shadow: 0 18px 50px rgba(23, 63, 64, .08); } .eyebrow { margin: 0 0 8px; color: var(--teal); font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; } h1, h2 { margin: 0; line-height: 1.1; } h1 { font-size: clamp(30px, 5vw, 52px); } h2 { font-size: 22px; } .lead { max-width: 700px; margin: 16px 0 0; color: var(--muted); font-size: 17px; line-height: 1.6; } .grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(240px, .8fr); gap: 20px; margin-top: 20px; }
   .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; } .stat { padding: 18px; border: 1px solid var(--line); background: #f5fbf8; } .stat strong { display: block; font-size: 28px; color: var(--teal); } .stat span, th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; } .field { display: grid; gap: 7px; margin: 14px 0; } .field label { font-weight: 700; } input { width: 100%; padding: 12px; border: 1px solid var(--line); font: inherit; } button { border: 0; padding: 12px 18px; color: white; background: var(--teal); font: inherit; font-weight: 700; cursor: pointer; } .table-wrap { overflow-x: auto; } table { width: 100%; border-collapse: collapse; } th, td { padding: 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; } .notice { margin-top: 16px; padding: 14px; background: #fff6dd; border-left: 4px solid #cf9c2e; } @media (max-width: 720px) { .shell { width: min(100% - 20px, 1060px); margin-top: 20px; } .hero, .panel { padding: 20px; } .grid { grid-template-columns: 1fr; } .stats { grid-template-columns: repeat(2, 1fr); } }
-</style></head><body><header class="topbar">IMPORTADOR MOODLE<small>Backend REST independiente del servicio LTI</small></header><main class="shell">${content}</main></body></html>`;
+</style></head><body><header class="topbar">IMPORTADOR MOODLE<small>Conexión mediante Web Service REST</small></header><main class="shell">${content}</main></body></html>`;
 }
 
 // Convierte el snapshot en tarjetas y tabla para la página principal.
@@ -166,7 +166,7 @@ function renderSummary(adminKey = '') {
 // Página principal del importador.
 // Solo muestra el formulario; la conexión real con Moodle ocurre al enviar POST /import.
 app.get('/', (req, res) => {
-  res.send(renderPage('Importador Moodle', `<section class="hero"><p class="eyebrow">Backend REST</p><h1>Importar Moodle</h1><p class="lead">Este servicio administra exclusivamente la URL, el token REST y el snapshot importado. El lanzamiento LTI funciona en otro backend.</p></section><div class="grid"><section>${renderSummary(req.query.admin_key)}</section><aside class="panel"><h2>Conexión</h2><form method="post" action="/import"><div class="field"><label for="admin_key">Clave administrativa</label><input id="admin_key" name="admin_key" type="password" required></div><div class="field"><label for="url">URL de Moodle</label><input id="url" name="url" type="url" placeholder="https://campus.example.com" value="${escapeHtml(moodleConfig.url)}" required></div><div class="field"><label for="token">Token REST</label><input id="token" name="token" type="password" required></div><button type="submit">Importar Moodle</button></form></aside></div>`));
+  res.send(renderPage('Importador Moodle', `<section class="hero"><p class="eyebrow">Backend REST</p><h1>Importar Moodle</h1><p class="lead">Conecta con la URL y el token REST de Moodle para consultar y mostrar los datos recibidos.</p></section><div class="grid"><section>${renderSummary(req.query.admin_key)}</section><aside class="panel"><h2>Conexión</h2><form method="post" action="/import"><div class="field"><label for="admin_key">Clave administrativa</label><input id="admin_key" name="admin_key" type="password" required></div><div class="field"><label for="url">URL de Moodle</label><input id="url" name="url" type="url" placeholder="https://campus.example.com" value="${escapeHtml(moodleConfig.url)}" required></div><div class="field"><label for="token">Token REST</label><input id="token" name="token" type="password" required></div><button type="submit">Importar Moodle</button></form></aside></div>`));
 });
 
 // Guarda temporalmente la configuración y ejecuta la importación completa.
@@ -175,8 +175,11 @@ app.post('/import', requireAdmin, async (req, res) => {
   try {
     moodleConfig = { url: normalizeMoodleUrl(req.body.url), token: String(req.body.token || '').trim() };
     moodleSnapshot = await importMoodleData();
+    console.log('\nRespuesta recibida de Moodle:');
+    console.log(JSON.stringify(moodleSnapshot, null, 2));
     res.redirect(`/?admin_key=${encodeURIComponent(req.body.admin_key)}`);
   } catch (error) {
+    console.error('Error consultando Moodle:', error.message);
     res.status(502).send(renderPage('Error de Moodle', `<section class="hero"><p class="eyebrow">Importación fallida</p><h1>No se pudo conectar con Moodle</h1><p class="lead">${escapeHtml(error.message)}</p></section>`));
   }
 });
@@ -198,7 +201,7 @@ app.get('/api/lms/snapshot/download', requireAdmin, (req, res) => {
   return res.send(JSON.stringify(moodleSnapshot, null, 2));
 });
 
-// Arranca únicamente el backend REST. El backend LTI se inicia por separado en server.js.
+// Arranca el servicio REST.
 app.listen(PORT, () => {
   console.log(`Backend REST Moodle escuchando en http://localhost:${PORT}`);
   console.log('  GET  /');
